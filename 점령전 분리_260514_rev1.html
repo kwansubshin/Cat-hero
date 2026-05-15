@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>캣 히어로 전략 타워 (날짜 입력 대응판)</title>
+    <style>
+        :root { 
+            --bg: #0f0f12; --card: #1c1c21; --primary: #00f2ff; --warning: #ffcc00; 
+            --ready: #00ff88; --danger: #ff4d4d; --defend: #3498db;
+            --grade-green: #2ecc71; --grade-blue: #3498db; --grade-gold: #f1c40f; 
+        }
+        body { background: var(--bg); color: #fff; font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 20px; }
+        
+        header { background: var(--card); padding: 15px 25px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        .guild-mgmt { display: flex; align-items: center; gap: 10px; flex-grow: 1; justify-content: center; }
+        .guild-tabs { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 5px; max-width: 500px; }
+        .guild-tab { background: #2a2a2a; color: #aaa; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap; display: flex; align-items: center; gap: 8px; border: 1px solid #444; }
+        .guild-tab.active { background: var(--primary); color: #000; border-color: var(--primary); }
+        .guild-tab .btn-del-guild { color: rgba(0,0,0,0.5); font-size: 1.2rem; line-height: 1; margin-left: 5px; }
+        
+        .header-btns { display: flex; align-items: center; gap: 15px; }
+        .btn-mode-toggle { background: var(--warning); color: #000; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; min-width: 140px; }
+        .btn-add-guild { background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-reset-all { background: #333; color: #ff4d4d; border: 1px solid #444; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
+
+        .top-info-area { display: grid; grid-template-columns: 8.5fr 1.5fr; gap: 15px; margin-bottom: 25px; align-items: stretch; }
+        .info-section { background: #15151b; border-radius: 12px; padding: 18px; border: 1px solid #333; }
+        .section-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; color: var(--primary); }
+        .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        .report-item { background: #1c1c21; padding: 15px; border-radius: 8px; border-left: 5px solid var(--warning); }
+        .report-time { font-weight: bold; color: var(--warning); font-size: 1.2rem; margin-bottom: 8px; }
+        
+        .defend-status { border: 1px solid var(--defend); background: #1a1e25; text-align: center; }
+        .defend-item { font-size: 1.6rem; font-weight: 900; line-height: 1.2; margin-bottom: 10px; }
+        .defend-item b { color: var(--defend); display: block; font-size: 0.9rem; }
+
+        .tabs { display: flex; gap: 6px; margin-bottom: 15px; background: #1a1a1a; padding: 6px; border-radius: 8px; }
+        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-radius: 5px; background: #2a2a2a; font-weight: bold; color: #777; transition: 0.2s; }
+        .tab.active { background: var(--primary); color: #000; }
+
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+        .land-card { background: var(--card); border-radius: 8px; padding: 15px; border: 2px solid #333; position: relative; display: flex; flex-direction: column; min-height: 250px; }
+        .land-id-label { font-weight: 900; font-size: 2.2rem; color: #fff; line-height: 1; }
+        .timer-val { font-size: 1.8rem; font-weight: bold; margin: 15px 0; text-align: center; color: #eee; }
+        .defend-box { font-size: 0.9rem; color: #aaa; display: flex; align-items: center; gap: 6px; cursor: pointer; background: #25252b; padding: 6px 10px; border-radius: 6px; border: 1px solid #444; }
+        .btn-now { background: var(--danger); color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 0 #b33636; margin-bottom: 10px; }
+        
+        /* 입력 영역 조절 */
+        .input-box { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; border-top: 1px dashed #444; padding-top: 12px; margin-top: auto; }
+        .input-box input { width: 32px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 4px; padding: 6px 0; text-align: center; font-size: 0.85rem; font-weight: bold; }
+        .input-box input.date-input { border-color: var(--primary); } /* 월, 일 강조 */
+        .btn-set { background: #0088ff; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; flex: 1.2; font-weight: bold; font-size: 0.8rem; }
+        .btn-reset-land { background: #444; color: #ccc; border: none; padding: 8px; border-radius: 4px; cursor: pointer; flex: 0.8; font-weight: bold; font-size: 0.8rem; }
+        
+        .grade-group { margin-bottom: 30px; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.02); border: 1px solid #222; }
+        .group-header { font-size: 1.3rem; font-weight: bold; margin-bottom: 15px; padding-left: 10px; border-left: 6px solid; }
+        .green { border-color: var(--grade-green); color: var(--grade-green); }
+        .blue { border-color: var(--grade-blue); color: var(--grade-blue); }
+        .gold { border-color: var(--grade-gold); color: var(--grade-gold); }
+        .defending { border-color: var(--defend) !important; background: #151a25 !important; }
+        .ready { border-color: var(--ready) !important; }
+        .not-ready { border-color: var(--danger) !important; }
+
+        .num-green { color: var(--grade-green); font-weight: bold; }
+        .num-blue { color: var(--grade-blue); font-weight: bold; }
+        .num-gold { color: var(--grade-gold); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h2 style="margin:0; color: var(--primary);">CAT HERO TOWER</h2>
+        <div id="liveClock" style="font-size: 0.8rem; color: #666;"></div>
+    </div>
+    <div class="guild-mgmt">
+        <div id="guildTabs" class="guild-tabs"></div>
+        <button class="btn-add-guild" onclick="addNewGuild()">+ 길드 추가</button>
+    </div>
+    <div class="header-btns">
+        <button id="modeBtn" class="btn-mode-toggle" onclick="toggleMode()">방식: 카운트다운</button>
+        <button class="btn-reset-all" onclick="resetAllData()">전체초기화</button>
+        <div style="text-align: right;"><span id="readyCount" style="font-size: 2.2rem; color: var(--ready); font-weight: bold;">0</span> <small>READY</small></div>
+    </div>
+</header>
+
+<div class="top-info-area">
+    <section class="info-section">
+        <div class="section-title">🚀 [<span id="displayGuildName">...</span>] 공격 가능 리포트</div>
+        <div id="reportContent" class="report-grid"></div>
+    </section>
+    <section class="info-section defend-status">
+        <div class="section-title">🛡️ 수비 구역</div>
+        <div id="defendStatusContent"></div>
+    </section>
+</div>
+
+<div class="tabs">
+    <div class="tab active" onclick="setSec('오리', this)">오리</div>
+    <div class="tab" onclick="setSec('원숭이', this)">원숭이</div>
+    <div class="tab" onclick="setSec('개구리', this)">개구리</div>
+    <div class="tab" onclick="setSec('악어', this)">악어</div>
+</div>
+
+<div id="main-content">
+    <div class="grade-group"><div class="group-header green">🟢 초록 땅 (1-10)</div><div id="grid-green" class="grid-container"></div></div>
+    <div class="grade-group"><div class="group-header blue">🔵 파란 땅 (20-22)</div><div id="grid-blue" class="grid-container"></div></div>
+    <div class="grade-group"><div class="group-header gold">🟡 금색 땅 (25-26)</div><div id="grid-gold" class="grid-container"></div></div>
+</div>
+
+<script>
+    const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1499738725742153739/7hC_fcw0457kbadCN6zBjiv6xWAIMGg6lB3atBACoDyIbbcRsH1STf8Y56ah-nwr-KnD';
+    const STORAGE_KEY = "CAT_HERO_TOWER_DATE_V1";
+    
+    let db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+        activeGuild: "기본",
+        guilds: { "기본": { data: {}, defend: {}, notified: {}, calcMode: "countdown" } }
+    };
+
+    let currentSec = '오리';
+    const validNums = [1,2,3,4,5,6,7,8,9,10,20,21,22,25,26];
+
+    function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+    function curG() { return db.guilds[db.activeGuild]; }
+
+    function init() {
+        renderGuildTabs();
+        updateModeUI();
+        render();
+        setInterval(update, 1000);
+    }
+
+    function renderGuildTabs() {
+        const container = document.getElementById('guildTabs');
+        container.innerHTML = '';
+        Object.keys(db.guilds).forEach(name => {
+            const tab = document.createElement('div');
+            tab.className = `guild-tab ${db.activeGuild === name ? 'active' : ''}`;
+            tab.onclick = () => { db.activeGuild = name; saveDB(); renderGuildTabs(); updateModeUI(); render(); };
+            tab.innerHTML = `${name} ${Object.keys(db.guilds).length > 1 ? `<span class="btn-del-guild" onclick="deleteGuild('${name}', event)">×</span>` : ''}`;
+            container.appendChild(tab);
+        });
+        document.getElementById('displayGuildName').innerText = db.activeGuild;
+    }
+
+    function addNewGuild() {
+        const name = prompt("새 길드 이름:");
+        if (!name || db.guilds[name]) return;
+        db.guilds[name] = { data: {}, defend: {}, notified: {}, calcMode: "countdown" };
+        db.activeGuild = name;
+        saveDB(); renderGuildTabs(); updateModeUI(); render();
+    }
+
+    function deleteGuild(name, e) {
+        e.stopPropagation();
+        if (!confirm(`[${name}] 삭제?`)) return;
+        delete db.guilds[name];
+        if (db.activeGuild === name) db.activeGuild = Object.keys(db.guilds)[0];
+        saveDB(); renderGuildTabs(); updateModeUI(); render();
+    }
+
+    function toggleMode() {
+        curG().calcMode = curG().calcMode === "countdown" ? "compare" : "countdown";
+        saveDB();
+        updateModeUI();
+    }
+    function updateModeUI() {
+        document.getElementById('modeBtn').innerText = curG().calcMode === "countdown" ? "방식: 카운트다운" : "방식: 입력시간 비교";
+    }
+
+    // 날짜 포함 시간 설정
+    function setTime(id) {
+        const now = new Date();
+        const mon = parseInt(document.getElementById(`mo-${id}`).value) || (now.getMonth() + 1);
+        const day = parseInt(document.getElementById(`d-${id}`).value) || now.getDate();
+        const h = parseInt(document.getElementById(`h-${id}`).value) || 0;
+        const m = parseInt(document.getElementById(`m-${id}`).value) || 0;
+        const s = parseInt(document.getElementById(`s-${id}`).value) || 0;
+        
+        let targetMs;
+
+        if (curG().calcMode === "countdown") {
+            // 카운트다운은 입력된 날짜/시간만큼 '남은 시간'으로 처리 (보통 당일 기준이 많으므로 날짜 무시 가능하지만 구조 유지)
+            targetMs = now.getTime() + (h * 3600000) + (m * 60000) + (s * 1000);
+        } else {
+            // 입력시간 비교: 입력된 시각(월/일 포함)에 48시간을 더함
+            const inputDate = new Date(now.getFullYear(), mon - 1, day, h, m, s);
+            targetMs = inputDate.getTime() + (48 * 3600000);
+        }
+        
+        curG().data[id] = targetMs;
+        delete curG().notified[id];
+        saveDB(); render();
+    }
+
+    function set48H(id) { curG().data[id] = new Date().getTime() + (48*3600000); delete curG().notified[id]; saveDB(); render(); }
+    function resetLand(id) { delete curG().data[id]; delete curG().notified[id]; saveDB(); render(); }
+    function toggleDefend(id) { 
+        if (curG().defend[id]) delete curG().defend[id];
+        else { curG().defend[id] = true; delete curG().notified[id]; }
+        saveDB(); render(); 
+    }
+    function resetAllData() { if(confirm("초기화?")) { curG().data={}; curG().defend={}; curG().notified={}; saveDB(); render(); } }
+    function setSec(sec, el) { currentSec = sec; document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); render(); }
+
+    function render() {
+        const grids = { 1: document.getElementById('grid-green'), 2: document.getElementById('grid-blue'), 3: document.getElementById('grid-gold') };
+        Object.values(grids).forEach(g => g.innerHTML = '');
+        
+        const now = new Date();
+        const curM = now.getMonth() + 1;
+        const curD = now.getDate();
+
+        validNums.forEach(i => {
+            const id = `${currentSec}-${i}`;
+            const grade = i <= 10 ? 1 : i <= 24 ? 2 : 3;
+            const card = document.createElement('div'); card.className = 'land-card';
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div class="land-id-label">${id}</div>
+                    <label class="defend-box"><input type="checkbox" onchange="toggleDefend('${id}')" ${curG().defend[id]?'checked':''}> 수비</label>
+                </div>
+                <div class="timer-val" id="time-${id}">READY</div>
+                <div id="status-${id}"></div>
+                <div class="input-box">
+                    <input type="number" id="mo-${id}" class="date-input" placeholder="M" value="${curM}">
+                    <input type="number" id="d-${id}" class="date-input" placeholder="D" value="${curD}">
+                    <span style="color:#666">|</span>
+                    <input type="number" id="h-${id}" placeholder="H">
+                    <input type="number" id="m-${id}" placeholder="M">
+                    <input type="number" id="s-${id}" placeholder="S">
+                    <button class="btn-set" onclick="setTime('${id}')">설정</button>
+                    <button class="btn-reset-land" onclick="resetLand('${id}')">초기화</button>
+                </div>`;
+            grids[grade].appendChild(card);
+        });
+        update();
+    }
+
+    function update() {
+        const now = new Date().getTime();
+        let readyCount = 0;
+        
+        Object.keys(db.guilds).forEach(gn => {
+            const g = db.guilds[gn];
+            ['오리','원숭이','개구리','악어'].forEach(s => {
+                validNums.forEach(n => {
+                    const id = `${s}-${n}`;
+                    if (g.defend[id] || !g.data[id]) return;
+                    const diff = g.data[id] - now;
+                    const stages = [{l:'30분',m:1800000},{l:'10분',m:600000},{l:'5분',m:300000},{l:'1분',m:60000},{l:'종료',m:0}];
+                    stages.forEach(st => {
+                        if (diff <= st.m && diff > (st.m - 10000)) {
+                            if (!g.notified[id]) g.notified[id] = [];
+                            if (!g.notified[id].includes(st.l)) {
+                                sendDiscord(`🚀 **[${gn}]** ${id} ${st.l === '종료' ? '해방!' : st.l + ' 전'}`);
+                                g.notified[id].push(st.l); saveDB();
+                            }
+                        }
+                    });
+                });
+            });
+        });
+
+        validNums.forEach(i => {
+            const id = `${currentSec}-${i}`;
+            const timeDisp = document.getElementById(`time-${id}`);
+            const statusArea = document.getElementById(`status-${id}`);
+            const card = timeDisp?.closest('.land-card');
+            if(!timeDisp) return;
+
+            if (curG().defend[id]) {
+                card.className = 'land-card defending'; timeDisp.innerText = "점령 중";
+                statusArea.innerHTML = `<div style="color:var(--defend); font-weight:bold; text-align:center;">아군 구역</div>`;
+            } else {
+                const diff = (curG().data[id] || 0) - now;
+                if (diff <= 0) {
+                    card.className = 'land-card ready'; timeDisp.innerText = "READY";
+                    statusArea.innerHTML = `<button class="btn-now" onclick="set48H('${id}')">해방됨 (48h)</button>`;
+                    readyCount++;
+                } else {
+                    card.className = 'land-card not-ready';
+                    const hTotal = Math.floor(diff/3600000);
+                    const m = Math.floor((diff%3600000)/60000);
+                    const s = Math.floor((diff%60000)/1000);
+                    timeDisp.innerText = `${hTotal}h ${m}m ${s}s`;
+                    statusArea.innerHTML = `<div style="color:var(--danger); font-weight:bold; text-align:center;">페널티 중</div>`;
+                }
+            }
+        });
+
+        updateReport(now);
+        updateDefendStatus();
+        document.getElementById('readyCount').innerText = readyCount;
+        document.getElementById('liveClock').innerText = new Date().toLocaleString();
+    }
+
+    function updateDefendStatus() {
+        let html = '';
+        ['오리','원숭이','개구리','악어'].forEach(s => {
+            let res = [];
+            validNums.forEach(i => { if (curG().defend[`${s}-${i}`]) res.push(i); });
+            if(res.length > 0) html += `<div class="defend-item"><b>${s}</b>${res.join(', ')}</div>`;
+        });
+        document.getElementById('defendStatusContent').innerHTML = html || '<div style="color:#555">없음</div>';
+    }
+
+    function updateReport(nowMs) {
+        let html = '';
+        [0, 6, 12, 18].forEach(hour => {
+            let target = new Date(); target.setHours(hour, 0, 0, 0);
+            if (target.getTime() < nowMs - 3600000) target.setDate(target.getDate() + 1);
+            const limit = target.getTime() - 600000;
+            let list = '';
+            ['오리','원숭이','개구리','악어'].forEach(sec => {
+                let res = [];
+                validNums.forEach(i => {
+                    const id = `${sec}-${i}`;
+                    if (!curG().defend[id] && (curG().data[id] || 0) <= limit) {
+                        let cls = i <= 10 ? 'num-green' : i <= 24 ? 'num-blue' : 'num-gold';
+                        res.push(`<span class="${cls}">${i}</span>`);
+                    }
+                });
+                if(res.length > 0) list += `<div><b>${sec}</b>: ${res.join(', ')}</div>`;
+            });
+            html += `<div class="report-item"><div class="report-time">${hour}:00</div><div class="report-list">${list || '없음'}</div></div>`;
+        });
+        document.getElementById('reportContent').innerHTML = html;
+    }
+
+    function sendDiscord(m) { fetch(DISCORD_WEBHOOK_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({content:m}) }).catch(()=>{}); }
+
+    window.onload = init;
+</script>
+</body>
+</html>
