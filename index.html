@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>캣 히어로 전략 타워 (드롭다운 복구본)</title>
+    <title>캣 히어로 전략 타워 (입력 UI 정밀 수정본)</title>
     <style>
         :root { 
             --bg: #0f0f12; --card: #1c1c21; --primary: #00f2ff; --warning: #ffcc00; 
@@ -13,7 +13,7 @@
         
         header { background: var(--card); padding: 15px 25px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
         
-        /* 길드 드롭다운 방식 복구 */
+        /* 길드 드롭다운 (유지) */
         .guild-mgmt { position: relative; flex-grow: 1; display: flex; justify-content: center; }
         .btn-guild-selector { background: #2a2a2a; color: var(--primary); border: 1px solid var(--primary); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; min-width: 180px; font-size: 1.1rem; }
         .guild-dropdown { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: #1c1c21; border: 1px solid #444; border-radius: 8px; width: 280px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease; z-index: 1000; margin-top: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
@@ -26,7 +26,7 @@
         .top-info-area { display: grid; grid-template-columns: 7.5fr 2.5fr; gap: 15px; margin-bottom: 25px; align-items: stretch; }
         .info-section { background: #15151b; border-radius: 12px; padding: 18px; border: 1px solid #333; display: flex; flex-direction: column; min-height: 320px; }
         
-        /* 리포트 스타일 복구 */
+        /* 리포트 (유지) */
         .report-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; flex-grow: 1; }
         .report-item { background: #1c1c21; padding: 15px; border-radius: 8px; border-left: 5px solid var(--warning); }
         .report-time { font-weight: bold; color: var(--warning); font-size: 1.6rem; margin-bottom: 8px; }
@@ -35,13 +35,11 @@
         .num-blue { color: var(--grade-blue) !important; font-weight: bold; }
         .num-gold { color: var(--grade-gold) !important; font-weight: bold; }
 
-        /* 수비 구역 스타일 (이미지 기반) */
+        /* 수비 구역 및 공유 (유지) */
         .defend-status { border: 1px solid var(--defend); background: #1a1e25; text-align: center; }
         .defend-content { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; padding: 10px; }
         .defend-item { font-size: 2.2rem; font-weight: 900; margin-bottom: 15px; line-height: 1.2; }
         .defend-item b { color: var(--defend); display: block; font-size: 1rem; margin-bottom: 5px; }
-
-        /* 수비 구역 하단 공유 기능 */
         .sidebar-footer { border-top: 1px dashed #444; padding-top: 15px; display: flex; flex-direction: column; gap: 6px; }
         .sidebar-footer input { width: 100%; background: #000; border: 1px solid #333; color: var(--ready); padding: 10px; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box; text-align: center; }
         .btn-footer { border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: bold; color: white; }
@@ -57,12 +55,16 @@
         
         .btn-now { background: var(--danger); color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 0 #b33636; margin-bottom: 10px; }
         
-        /* 정밀 입력창 */
-        .input-box { display: flex; flex-wrap: wrap; gap: 4px; border-top: 1px dashed #444; padding-top: 12px; margin-top: auto; justify-content: center; }
-        .input-box input { width: 34px; background: #2a2a2a; border: 1px solid #444; color: #fff; text-align: center; border-radius: 4px; padding: 6px 0; font-size: 0.9rem; font-weight: bold; }
-        .btn-group { display: flex; gap: 4px; width: 100%; margin-top: 6px; }
-        .btn-set { background: #0088ff; color: #fff; border: none; padding: 8px; border-radius: 4px; flex: 1.5; cursor: pointer; font-weight: bold; }
-        .btn-reset-land { background: #444; color: #ccc; border: none; padding: 8px; border-radius: 4px; flex: 1; cursor: pointer; font-weight: bold; }
+        /* 🛠️ 입력창 UI 수정: 이미지와 동일하게 변경 */
+        .input-box { display: flex; align-items: center; gap: 4px; border-top: 1px dashed #444; padding-top: 12px; margin-top: auto; justify-content: center; }
+        .input-box input { width: 34px; background: #2a2a2a; border: 1px solid #444; color: #fff; text-align: center; border-radius: 4px; padding: 7px 0; font-size: 0.9rem; font-weight: bold; outline: none; }
+        /* 월/일 강조 테두리 */
+        .input-box input.date-input { border: 2px solid #009688; }
+        .input-box span { color: #555; font-weight: bold; margin: 0 2px; }
+        
+        .btn-group { display: flex; gap: 4px; width: 100%; margin-top: 8px; }
+        .btn-set { background: #0088ff; color: #fff; border: none; padding: 10px; border-radius: 4px; flex: 1.8; cursor: pointer; font-weight: bold; }
+        .btn-reset-land { background: #333; color: #aaa; border: none; padding: 10px; border-radius: 4px; flex: 1; cursor: pointer; font-weight: bold; }
 
         .grade-group { margin-bottom: 35px; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.02); border: 1px solid #222; }
         .group-header { font-size: 1.4rem; font-weight: bold; margin-bottom: 15px; padding-left: 10px; border-left: 6px solid; }
@@ -135,7 +137,6 @@
     function curG() { return db.guilds[db.activeGuild]; }
     function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
 
-    /* 드롭다운 로직 복구 */
     function toggleDropdown(e) { e.stopPropagation(); document.getElementById('guildDropdown').classList.toggle('open'); }
     function closeDropdown() { document.getElementById('guildDropdown').classList.remove('open'); }
 
@@ -175,12 +176,16 @@
                 <div class="timer-val" id="time-${id}">READY</div>
                 <div id="status-${id}"></div>
                 <div class="input-box">
-                    <input type="number" id="mo-${id}" value="${now.getMonth()+1}">월 <input type="number" id="d-${id}" value="${now.getDate()}">일
-                    <input type="number" id="h-${id}" placeholder="H">시 <input type="number" id="m-${id}" placeholder="M">분 <input type="number" id="s-${id}" placeholder="S">초
-                    <div class="btn-group">
-                        <button class="btn-set" onclick="setTime('${id}')">설정</button>
-                        <button class="btn-reset-land" onclick="resetLand('${id}')">초기화</button>
-                    </div>
+                    <input type="number" id="mo-${id}" class="date-input" value="${now.getMonth()+1}">
+                    <input type="number" id="d-${id}" class="date-input" value="${now.getDate()}">
+                    <span>|</span>
+                    <input type="number" id="h-${id}" placeholder="H">
+                    <input type="number" id="m-${id}" placeholder="M">
+                    <input type="number" id="s-${id}" placeholder="S">
+                </div>
+                <div class="btn-group">
+                    <button class="btn-set" onclick="setTime('${id}')">설정</button>
+                    <button class="btn-reset-land" onclick="resetLand('${id}')">초기화</button>
                 </div>`;
             grids[grade].appendChild(card);
         });
